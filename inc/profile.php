@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function uri_allow_js_show_checkbox( $user ) {
 
-	if ( !_uri_user_can_update() ) { 
+	if ( ! _uri_user_can_update() ) { 
 		return false; 
 	}
 
@@ -43,13 +43,66 @@ add_action( 'edit_user_profile', 'uri_allow_js_show_checkbox' );
  * @param int $user_id the user's id.
  */
 function uri_allow_js_save_profile_fields( $user_id ) {
-	if ( !_uri_user_can_update() ) { 
+	if ( ! _uri_user_can_update() ) { 
 		return false; 
 	}
 	update_user_meta( $user_id, 'uri_allow_js_trusted', $_POST['uri_allow_js_trusted'] );
 }
 //add_action( 'personal_options_update', 'uri_allow_js_save_profile_fields' );
 add_action( 'edit_user_profile_update', 'uri_allow_js_save_profile_fields' );
+
+
+
+/**
+ * Adds a column to the users list.
+ * @param arr $columns are the columns in the users table
+ * @return arr
+ */
+function uri_allow_js_modify_user_table( $columns ) {
+	if ( ! _uri_user_can_update() ) { 
+		return $columns; 
+	}
+  $new_columns = array();
+  
+  foreach($columns as $key => $value) {
+    if ( 'posts' === $key ) {
+    	// add the new column just before "Posts"
+      $new_columns['uri_allow_js'] = 'Allow JS';
+    }
+    $new_columns[$key] = $value;
+  }
+  return $new_columns;
+
+}
+add_filter( 'manage_users_columns', 'uri_allow_js_modify_user_table' );
+
+/**
+ * Populates new column in the users list
+ * @param arr $value are the columns in the users table
+ * @param arr $column_name are the columns in the users table
+ * @param arr $user_id are the columns in the users table
+ * @return str
+ */
+function uri_allow_js_modify_user_table_row( $value, $column_name, $user_id ) {
+	if ( ! _uri_user_can_update() ) { 
+		return $value; 
+	}
+	if ( 'uri_allow_js' === $column_name ) {
+		if( user_can( $user_id, 'unfiltered_html') ) {
+			$value = 'Yes (role)';
+		}
+		$checked = get_the_author_meta( 'uri_allow_js_trusted', $user_id );
+		if ( 'true' == $checked ) {
+			$value = 'Yes (plugin)';
+		}
+	}
+	return $value;
+}
+add_filter( 'manage_users_custom_column', 'uri_allow_js_modify_user_table_row', 10, 3 );
+
+
+
+
 
 
 /**

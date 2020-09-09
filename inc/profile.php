@@ -88,6 +88,7 @@ function uri_allow_js_modify_user_table_row( $value, $column_name, $user_id ) {
 		return $value; 
 	}
 	if ( 'uri_allow_js' === $column_name ) {
+		$value = 'No';
 		if( user_can( $user_id, 'unfiltered_html') ) {
 			$value = 'Yes (role)';
 		}
